@@ -1,21 +1,31 @@
 import {
-	IDataObject,
-	ILoadOptionsFunctions,
 	INodeExecutionData,
+	INodeInputConfiguration,
+	INodeOutputConfiguration,
 	INodeType,
 	INodeTypeDescription,
+	NodeConnectionType,
 	NodeOperationError,
+	IExecuteFunctions
 } from 'n8n-workflow';
-import { IExecuteFunctions, NodeConnectionType } from 'n8n-workflow';
+import {
+	sendSmartEmail,
+	getSmartEmailOptions,
+	getMergeFieldOptions,
+} from './operations/TransactionalEmail';
+// import { createList } from './operations/List';
+// import { addOrUpdateSubscriber } from './operations/Subscriber';
+// import { addToSuppressionList } from './operations/Suppression';
 
 export class TouchBasePro implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'TouchBasePro',
-		name: 'touchbasepro',
+		name: 'touchBasePro',
 		icon: 'file:logo.svg',
-		group: [],
+		group: ['output'],
 		version: 1,
-		description: 'TouchBase Pro Node',
+		description: 'Interact with TouchBasePro API',
+		subtitle: '={{$parameter["operation"] || "Select an Operation"}}',
 		defaults: {
 			name: 'TouchBasePro',
 		},
@@ -25,127 +35,287 @@ export class TouchBasePro implements INodeType {
 				required: true,
 			},
 		],
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
-		requestDefaults: {
-			baseURL: 'https://api.touchbasepro.io/email',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-			},
-		},
-		usableAsTool: true,
+		inputs: ['main'] as (NodeConnectionType | INodeInputConfiguration)[],
+		outputs: ['main'] as (NodeConnectionType | INodeOutputConfiguration)[],
 		properties: [
 			{
-				displayName: 'Smart Email',
-				name: 'smartEmailIdDropdown',
+				displayName: 'Category',
+				name: 'category',
+				type: 'options',
+				typeOptions: { searchable: true },
+				options: [
+					{ name: 'Transactional Email Actions', value: 'transactionalEmail' },
+					{ name: 'List Actions', value: 'list' },
+					{ name: 'Subscriber Actions', value: 'subscriber' },
+					{ name: 'Suppression Actions', value: 'suppression' },
+				],
+				default: '', // No automatic selection
+				description: 'Select the category of actions to perform',
+			},
+			// Operation for Transactional Email Actions
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				typeOptions: { searchable: true },
+				displayOptions: {
+					show: { category: ['transactionalEmail'] },
+				},
+				options: [
+					{ name: 'Send Transactional Smart Email', value: 'Send Smart Email' },
+				],
+				default: '', // No automatic selection
+			},
+			// Operation for List Actions (commented out)
+			/*
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				typeOptions: { searchable: true },
+				displayOptions: {
+					show: { category: ['list'] },
+				},
+				options: [
+					{ name: 'Create List', value: 'Create List' },
+				],
+				default: '',
+			},
+			*/
+			// Operation for Subscriber Actions (commented out)
+			/*
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				typeOptions: { searchable: true },
+				displayOptions: {
+					show: { category: ['subscriber'] },
+				},
+				options: [
+					{ name: 'Add/Update Subscriber', value: 'Add/Update Subscriber' },
+				],
+				default: '',
+			},
+			*/
+			// Operation for Suppression Actions (commented out)
+			/*
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				typeOptions: { searchable: true },
+				displayOptions: {
+					show: { category: ['suppression'] },
+				},
+				options: [
+					{ name: 'Add to Suppression List', value: 'Add to Suppression List' },
+				],
+				default: '',
+			},
+			*/
+			// Smart Email Template dropdown
+			{
+				displayName: 'Smart Email Template',
+				name: 'smartEmailId',
 				type: 'options',
 				typeOptions: {
 					loadOptionsMethod: 'getSmartEmailOptions',
 					searchable: true,
 				},
-				required: true,
+				displayOptions: {
+					show: {
+						category: ['transactionalEmail'],
+						operation: ['Send Smart Email'],
+					},
+				},
 				default: '',
+				required: true,
+				description: 'Choose from your TouchBasePro smart transactional email templates',
 			},
+			// Recipients
 			{
 				displayName: 'To',
-				name: 'To',
+				name: 'to',
 				type: 'fixedCollection',
-				required: true,
-				default: [],
+				typeOptions: { multipleValues: true },
+				displayOptions: {
+					show: {
+						category: ['transactionalEmail'],
+						operation: ['Send Smart Email'],
+					},
+				},
+				default: {},
 				options: [
 					{
-						name: 'to',
-						displayName: 'To',
+						name: 'recipients',
+						displayName: 'Recipients',
 						values: [
-							{ name: 'name', displayName: 'Name', type: 'string', default: '' },
-							{ name: 'email', displayName: 'Email', type: 'string', default: '' },
+							{ displayName: 'Name', name: 'name', type: 'string', default: '' },
+							{ displayName: 'Email', name: 'email', type: 'string', default: '' },
 						],
 					},
 				],
 			},
+			// CC recipients
 			{
 				displayName: 'CC',
-				name: 'CC',
+				name: 'cc',
 				type: 'fixedCollection',
-				default: [],
+				typeOptions: { multipleValues: true },
+				displayOptions: {
+					show: {
+						category: ['transactionalEmail'],
+						operation: ['Send Smart Email'],
+					},
+				},
+				default: {},
 				options: [
 					{
-						name: 'cc',
-						displayName: 'CC',
+						name: 'recipients',
+						displayName: 'CC Recipients',
 						values: [
-							{ name: 'name', displayName: 'Name', type: 'string', default: '' },
-							{ name: 'email', displayName: 'Email', type: 'string', default: '' },
+							{ displayName: 'Name', name: 'name', type: 'string', default: '' },
+							{ displayName: 'Email', name: 'email', type: 'string', default: '' },
 						],
 					},
 				],
 			},
+			// BCC recipients
 			{
 				displayName: 'BCC',
-				name: 'BCC',
+				name: 'bcc',
 				type: 'fixedCollection',
-				default: [],
+				typeOptions: { multipleValues: true },
+				displayOptions: {
+					show: {
+						category: ['transactionalEmail'],
+						operation: ['Send Smart Email'],
+					},
+				},
+				default: {},
 				options: [
 					{
-						name: 'bcc',
-						displayName: 'BCC',
+						name: 'recipients',
+						displayName: 'BCC Recipients',
 						values: [
-							{ name: 'name', displayName: 'Name', type: 'string', default: '' },
-							{ name: 'email', displayName: 'Email', type: 'string', default: '' },
+							{ displayName: 'Name', name: 'name', type: 'string', default: '' },
+							{ displayName: 'Email', name: 'email', type: 'string', default: '' },
 						],
 					},
 				],
 			},
+			// Attachments (not implemented)
 			{
 				displayName: 'Attachments',
-				name: 'Attachments',
+				name: 'attachments',
 				type: 'fixedCollection',
-				default: [],
+				typeOptions: { multipleValues: true },
+				displayOptions: {
+					show: {
+						category: ['transactionalEmail'],
+						operation: ['Send Smart Email'],
+					},
+				},
+				default: {},
 				options: [
 					{
 						name: 'attachments',
-						displayName: 'Attachment',
+						displayName: 'Attachments',
 						values: [
-							{ name: 'name', displayName: 'Name', type: 'string', default: '' },
-							{ name: 'type', displayName: 'Type', type: 'string', default: '' },
-							{ name: 'data', displayName: 'Data', type: 'string', default: '' },
+							{ displayName: 'Name', name: 'name', type: 'string', default: '' },
+							{ displayName: 'Type', name: 'type', type: 'string', default: '' },
+							{ displayName: 'Data', name: 'data', type: 'string', default: '' },
 						],
 					},
 				],
 			},
+			// Merge Fields
 			{
-				displayName: 'Fields',
-				name: 'Fields',
-				type: 'collection',
+				displayName: 'Merge Fields',
+				name: 'mergeFields',
+				type: 'fixedCollection',
+				typeOptions: { multipleValues: true },
+				displayOptions: {
+					show: {
+						category: ['transactionalEmail'],
+						operation: ['Send Smart Email'],
+					},
+				},
 				default: {},
 				options: [
-					{ name: 'Name', displayName: 'Name', type: 'string', default: '' },
-					{ name: 'Email', displayName: 'Email', type: 'string', default: '' },
-					{ name: 'ID', displayName: 'ID', type: 'string', default: '' },
-					{ name: 'Random number', displayName: 'Random number', type: 'string', default: '' },
-					{ name: 'Current Day', displayName: 'Current Day', type: 'string', default: '' },
-					{ name: 'Abuse / Spam complaints', displayName: 'Abuse / Spam complaints', type: 'string', default: '' },
-					{ name: 'Unsubscribe', displayName: 'Unsubscribe', type: 'string', default: '' },
-					{ name: 'Preferences', displayName: 'Preferences', type: 'string', default: '' },
+					{
+						name: 'field',
+						displayName: 'Field',
+						values: [
+							{
+								displayName: 'Field Name',
+								name: 'fieldName',
+								type: 'options',
+								typeOptions: {
+									loadOptionsMethod: 'getMergeFieldOptions',
+									loadOptionsDependsOn: ['smartEmailId'],
+								},
+								default: '',
+							},
+							{
+								displayName: 'Value',
+								name: 'fieldValue',
+								type: 'string',
+								default: '',
+							},
+						],
+					},
 				],
 			},
+			// Flags (not implemented)
 			{
 				displayName: 'Allow Tracking',
 				name: 'allowTracking',
 				type: 'boolean',
-				default: false,
+				displayOptions: {
+					show: {
+						category: ['transactionalEmail'],
+						operation: ['Send Smart Email'],
+					},
+				},
+				default: true,
 			},
 			{
 				displayName: 'Ignore Suppression List',
 				name: 'ignoreSuppressionList',
 				type: 'boolean',
-				default: false,
+				displayOptions: {
+					show: {
+						category: ['transactionalEmail'],
+						operation: ['Send Smart Email'],
+					},
+				},
+				default: true,
 			},
 			{
 				displayName: 'Add Recipient To List',
 				name: 'addRecipientToList',
 				type: 'boolean',
-				default: false,
+				displayOptions: {
+					show: {
+						category: ['transactionalEmail'],
+						operation: ['Send Smart Email'],
+					},
+				},
+				default: true,
+			},
+			// Test Input field for other categories
+			{
+				displayName: 'Test Input',
+				name: 'testInput',
+				type: 'string',
+				displayOptions: {
+					show: {
+						category: ['list', 'subscriber', 'suppression'],
+					},
+				},
+				default: '',
 			},
 		],
 	};
@@ -153,50 +323,39 @@ export class TouchBasePro implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-		const creds = await this.getCredentials('touchBaseProApi');
 
-		const unwrap = <T>(param: any, field: string): T[] => {
-			if (!param) return [];
-			const v = param[field];
-			if (Array.isArray(v)) return v;
-			if (typeof v === 'object') return [v];
-			return [];
+		// Mapping of category and operation to functions
+		const operationFunctionMap: { [key: string]: { [key: string]: Function } } = {
+			'transactionalEmail': {
+				'Send Smart Email': sendSmartEmail,
+			},
+			// Uncomment and add mappings as needed
+			// 'list': {
+			// 	'Create List': createList,
+			// },
+			// 'subscriber': {
+			// 	'Add/Update Subscriber': addOrUpdateSubscriber,
+			// },
+			// 'suppression': {
+			// 	'Add to Suppression List': addToSuppressionList,
+			// },
 		};
 
 		for (let i = 0; i < items.length; i++) {
-			const smartEmailId = this.getNodeParameter('smartEmailIdDropdown', i) as string;
-			const to = unwrap<{ name: string; email: string }>(this.getNodeParameter('To', i, {}), 'to');
-			if (!to.length) throw new NodeOperationError(this.getNode(), 'At least one "To" recipient is required');
+			const category = this.getNodeParameter('category', i) as string;
+			const operation = this.getNodeParameter('operation', i) as string;
 
-			const cc = unwrap<{ name: string; email: string }>(this.getNodeParameter('CC', i, {}), 'cc');
-			const bcc = unwrap<{ name: string; email: string }>(this.getNodeParameter('BCC', i, {}), 'bcc');
-			const attachments = unwrap<{ name: string; type: string; data: string }>(this.getNodeParameter('Attachments', i, {}), 'attachments');
-			const fields = this.getNodeParameter('Fields', i, {}) as IDataObject;
-			const allowTracking = this.getNodeParameter('allowTracking', i, false);
-			const ignoreSuppressionList = this.getNodeParameter('ignoreSuppressionList', i, false);
-			const addRecipientToList = this.getNodeParameter('addRecipientToList', i, false);
-
-			const body: IDataObject = { to };
-			if (cc.length) body.cc = cc;
-			if (bcc.length) body.bcc = bcc;
-			if (attachments.length) body.attachments = attachments;
-			if (Object.keys(fields).length) body.fields = fields;
-			if (allowTracking) body.allowTracking = true;
-			if (ignoreSuppressionList) body.ignoreSuppressionList = true;
-			if (addRecipientToList) body.addRecipientToList = true;
-
-			const response = await this.helpers.request({
-				method: 'POST',
-				url: `https://api.touchbasepro.io/email/transactional/smartemails/${smartEmailId}/messages`,
-				body,
-				json: true,
-				auth: {
-					user: creds.username as string,
-					pass: creds.password as string,
-				},
-			});
-
-			returnData.push({ json: response });
+			const func = operationFunctionMap[category]?.[operation];
+			if (func) {
+				const response = await func.call(this, i);
+				returnData.push({ json: response });
+			} else {
+				throw new NodeOperationError(
+					this.getNode(),
+					`Operation "${operation}" not implemented for category "${category}"`,
+					{ itemIndex: i }
+				);
+			}
 		}
 
 		return [returnData];
@@ -204,39 +363,8 @@ export class TouchBasePro implements INodeType {
 
 	methods = {
 		loadOptions: {
-			async getSmartEmailOptions(this: ILoadOptionsFunctions): Promise<{ name: string; value: string }[]> {
-				const creds = await this.getCredentials('touchBaseProApi');
-				const pageSize = 100;
-				let page = 1;
-				let totalPages = 1;
-				let allOptions: { name: string; value: string }[] = [];
-
-				do {
-					const res = await this.helpers.request({
-						method: 'GET',
-						url: 'https://api.touchbasepro.io/email/transactional/smartemails',
-						qs: { page, pageSize },
-						json: true,
-						auth: {
-							user: creds.username as string,
-							pass: creds.password as string,
-						},
-					});
-
-					if (!Array.isArray(res.data)) break;
-
-					totalPages = res.totalPages || 1;
-					const options = res.data.map((e: any) => ({
-						name: e.name,
-						value: e.smartEmailId,
-					}));
-
-					allOptions.push(...options);
-					page++;
-				} while (page <= totalPages);
-
-				return allOptions;
-			},
+			getSmartEmailOptions,
+			getMergeFieldOptions,
 		},
 	};
 }
