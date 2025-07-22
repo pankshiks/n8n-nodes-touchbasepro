@@ -1,7 +1,7 @@
-import { IDataObject, IExecuteFunctions, IHttpRequestMethods } from 'n8n-workflow';
+import { IDataObject, IExecuteFunctions, IHttpRequestMethods, ILoadOptionsFunctions } from 'n8n-workflow';
 
 export async function touchBaseRequest(
-	this: IExecuteFunctions,
+	this: IExecuteFunctions | ILoadOptionsFunctions,
 	method: IHttpRequestMethods,
 	endpoint: string,
 	body: IDataObject = {},

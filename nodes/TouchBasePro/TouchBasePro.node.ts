@@ -6,7 +6,7 @@ import {
 	INodeTypeDescription,
 	NodeConnectionType,
 	NodeOperationError,
-	IExecuteFunctions
+	IExecuteFunctions,
 } from 'n8n-workflow';
 import {
 	sendSmartEmail,
@@ -14,7 +14,12 @@ import {
 	getMergeFieldOptions,
 } from './operations/TransactionalEmail';
 // import { createList } from './operations/List';
-// import { addOrUpdateSubscriber } from './operations/Subscriber';
+import {
+	addOrUpdateSubscriber,
+	getListOptions,
+	getCustomFields,
+	getSubscriberOptions,
+} from './operations/List';
 // import { addToSuppressionList } from './operations/Suppression';
 
 export class TouchBasePro implements INodeType {
@@ -61,13 +66,10 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: { category: ['transactionalEmail'] },
 				},
-				options: [
-					{ name: 'Send Transactional Smart Email', value: 'Send Smart Email' },
-				],
+				options: [{ name: 'Send Transactional Smart Email', value: 'sendSmartEmail' }],
 				default: '', // No automatic selection
 			},
-			// Operation for List Actions (commented out)
-			/*
+			// Operation for List Actions
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -76,28 +78,180 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: { category: ['list'] },
 				},
-				options: [
-					{ name: 'Create List', value: 'Create List' },
-				],
+				options: [{ name: 'Add/Update Subscriber', value: 'addOrUpdateSubscriber' }],
 				default: '',
 			},
-			*/
-			// Operation for Subscriber Actions (commented out)
-			/*
 			{
-				displayName: 'Operation',
-				name: 'operation',
+				displayName: 'List',
+				name: 'listId',
 				type: 'options',
-				typeOptions: { searchable: true },
-				displayOptions: {
-					show: { category: ['subscriber'] },
+				typeOptions: {
+					loadOptionsMethod: 'getListOptions',
+					searchable: true,
+					refreshOnChange: true,
 				},
-				options: [
-					{ name: 'Add/Update Subscriber', value: 'Add/Update Subscriber' },
-				],
 				default: '',
+				required: true,
+				displayOptions: {
+					show: { category: ['list'], operation: ['addOrUpdateSubscriber'] },
+				},
 			},
-			*/
+			{
+				displayName: 'Action',
+				name: 'subOperation',
+				type: 'options',
+				options: [
+					{ name: 'Add', value: 'add' },
+					{ name: 'Update', value: 'update' },
+				],
+				default: 'add',
+				displayOptions: {
+					show: { category: ['list'], operation: ['addOrUpdateSubscriber'] },
+				},
+			},
+			// Then fields for add vs. update:
+			{
+				displayName: 'Email',
+				name: 'email',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						category: ['list'],
+						operation: ['addOrUpdateSubscriber'],
+						subOperation: ['add'],
+					},
+				},
+			},
+			{
+				displayName: 'Current Email',
+				name: 'currentEmail',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getSubscriberOptions',
+					loadOptionsDependsOn: ['listId'],
+					searchable: true,
+				},
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						category: ['list'],
+						operation: ['addOrUpdateSubscriber'],
+						subOperation: ['update'],
+					},
+				},
+			},
+			{
+				displayName: 'New Email',
+				name: 'email',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						category: ['list'],
+						operation: ['addOrUpdateSubscriber'],
+						subOperation: ['update'],
+					},
+				},
+			},
+			{
+				displayName: 'Name',
+				name: 'name',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						category: ['list'],
+						operation: ['addOrUpdateSubscriber'],
+					},
+				},
+			},
+			{
+				displayName: 'Re‑subscribe',
+				name: 'reSubscribe',
+				type: 'boolean',
+				default: true,
+				displayOptions: {
+					show: {
+						category: ['list'],
+						operation: ['addOrUpdateSubscriber'],
+					},
+				},
+			},
+			{
+				displayName: 'Consent To Track',
+				name: 'consentToTrack',
+				type: 'boolean',
+				default: true,
+				displayOptions: {
+					show: {
+						category: ['list'],
+						operation: ['addOrUpdateSubscriber'],
+					},
+				},
+			},
+			{
+				displayName: 'Status',
+				name: 'status',
+				type: 'options',
+				options: [
+					{ name: 'Active', value: 'Active' },
+					{ name: 'Unsubscribed', value: 'Unsubscribed' },
+					{ name: 'Bounced', value: 'Bounced' },
+					{ name: 'Unconfirmed', value: 'Unconfirmed' },
+					{ name: 'Deleted', value: 'Deleted' },
+				],
+				default: 'active',
+				displayOptions: {
+					show: {
+						category: ['list'],
+						operation: ['addOrUpdateSubscriber'],
+					},
+				},
+			},
+			{
+				displayName: 'Custom Fields',
+				name: 'customFields',
+				type: 'fixedCollection',
+				typeOptions: { multipleValues: true },
+				displayOptions: {
+					show: {
+						category: ['list'],
+						operation: ['addOrUpdateSubscriber'],
+					},
+				},
+				default: {},
+				options: [
+					{
+						displayName: 'Field',
+						name: 'field',
+						values: [
+							{
+								displayName: 'Field',
+								name: 'fieldMeta',
+								type: 'options',
+								typeOptions: {
+									loadOptionsMethod: 'getCustomFields',
+									loadOptionsDependsOn: ['listId'],
+								},
+								default: '',
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								default: '',
+								description:
+									"Enter the value for the selected field (format must match the field's type)",
+							},
+						],
+					},
+				],
+			},
+
 			// Operation for Suppression Actions (commented out)
 			/*
 			{
@@ -126,7 +280,7 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: {
 						category: ['transactionalEmail'],
-						operation: ['Send Smart Email'],
+						operation: ['sendSmartEmail'],
 					},
 				},
 				default: '',
@@ -142,7 +296,7 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: {
 						category: ['transactionalEmail'],
-						operation: ['Send Smart Email'],
+						operation: ['sendSmartEmail'],
 					},
 				},
 				default: {},
@@ -166,7 +320,7 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: {
 						category: ['transactionalEmail'],
-						operation: ['Send Smart Email'],
+						operation: ['sendSmartEmail'],
 					},
 				},
 				default: {},
@@ -190,7 +344,7 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: {
 						category: ['transactionalEmail'],
-						operation: ['Send Smart Email'],
+						operation: ['sendSmartEmail'],
 					},
 				},
 				default: {},
@@ -214,7 +368,7 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: {
 						category: ['transactionalEmail'],
-						operation: ['Send Smart Email'],
+						operation: ['sendSmartEmail'],
 					},
 				},
 				default: {},
@@ -239,7 +393,7 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: {
 						category: ['transactionalEmail'],
-						operation: ['Send Smart Email'],
+						operation: ['sendSmartEmail'],
 					},
 				},
 				default: {},
@@ -276,7 +430,7 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: {
 						category: ['transactionalEmail'],
-						operation: ['Send Smart Email'],
+						operation: ['sendSmartEmail'],
 					},
 				},
 				default: true,
@@ -288,7 +442,7 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: {
 						category: ['transactionalEmail'],
-						operation: ['Send Smart Email'],
+						operation: ['sendSmartEmail'],
 					},
 				},
 				default: true,
@@ -300,7 +454,7 @@ export class TouchBasePro implements INodeType {
 				displayOptions: {
 					show: {
 						category: ['transactionalEmail'],
-						operation: ['Send Smart Email'],
+						operation: ['sendSmartEmail'],
 					},
 				},
 				default: true,
@@ -312,7 +466,7 @@ export class TouchBasePro implements INodeType {
 				type: 'string',
 				displayOptions: {
 					show: {
-						category: ['list', 'subscriber', 'suppression'],
+						category: ['subscriber', 'suppression'],
 					},
 				},
 				default: '',
@@ -326,19 +480,12 @@ export class TouchBasePro implements INodeType {
 
 		// Mapping of category and operation to functions
 		const operationFunctionMap: { [key: string]: { [key: string]: Function } } = {
-			'transactionalEmail': {
-				'Send Smart Email': sendSmartEmail,
+			transactionalEmail: {
+				sendSmartEmail: sendSmartEmail,
 			},
-			// Uncomment and add mappings as needed
-			// 'list': {
-			// 	'Create List': createList,
-			// },
-			// 'subscriber': {
-			// 	'Add/Update Subscriber': addOrUpdateSubscriber,
-			// },
-			// 'suppression': {
-			// 	'Add to Suppression List': addToSuppressionList,
-			// },
+			list: {
+				addOrUpdateSubscriber: addOrUpdateSubscriber,
+			},
 		};
 
 		for (let i = 0; i < items.length; i++) {
@@ -353,7 +500,7 @@ export class TouchBasePro implements INodeType {
 				throw new NodeOperationError(
 					this.getNode(),
 					`Operation "${operation}" not implemented for category "${category}"`,
-					{ itemIndex: i }
+					{ itemIndex: i },
 				);
 			}
 		}
@@ -365,6 +512,9 @@ export class TouchBasePro implements INodeType {
 		loadOptions: {
 			getSmartEmailOptions,
 			getMergeFieldOptions,
+			getListOptions,
+			getCustomFields,
+			getSubscriberOptions,
 		},
 	};
 }
