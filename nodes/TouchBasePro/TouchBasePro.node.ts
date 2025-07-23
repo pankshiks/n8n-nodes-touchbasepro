@@ -13,14 +13,14 @@ import {
 	getSmartEmailOptions,
 	getMergeFieldOptions,
 } from './operations/TransactionalEmail';
-// import { createList } from './operations/List';
+import { createList } from './operations/List';
 import {
 	addOrUpdateSubscriber,
 	getCustomFields,
 	getSubscriberOptions,
 } from './operations/Subscriber';
 import { getListOptions } from './operations/List';
-// import { addToSuppressionList } from './operations/Suppression';
+import { addToSuppressionList, getSuppressionListOptions, getSuppressionEmailsOptions } from './operations/Suppression';
 
 export class TouchBasePro implements INodeType {
 	description: INodeTypeDescription = {
@@ -253,7 +253,6 @@ export class TouchBasePro implements INodeType {
 			},
 
 			// Operation for Suppression Actions (commented out)
-			/*
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -263,11 +262,40 @@ export class TouchBasePro implements INodeType {
 					show: { category: ['suppression'] },
 				},
 				options: [
-					{ name: 'Add to Suppression List', value: 'Add to Suppression List' },
+					{ name: 'Add Email(s) to Suppression List', value: 'addToSuppressionList' },
 				],
 				default: '',
 			},
-			*/
+			{
+				displayName: 'List',
+				name: 'suppressionListId',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getSuppressionListOptions',
+					searchable: true,
+					refreshOnChange: true,
+				},
+				default: '',
+				required: true,
+				displayOptions: {
+					show: { category: ['suppression'], operation: ['addToSuppressionList'] },
+				},
+			},
+			{
+				displayName: 'Emails to Suppress',
+				name: 'suppressionEmails',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'getSuppressionEmailsOptions',
+					loadOptionsDependsOn: ['suppressionListId'],
+					searchable: true,
+				},
+				default: [],
+				required: true,
+				displayOptions: {
+					show: { category: ['suppression'], operation: ['addToSuppressionList'] },
+				},
+			},
 			// Smart Email Template dropdown
 			{
 				displayName: 'Smart Email Template',
@@ -459,17 +487,81 @@ export class TouchBasePro implements INodeType {
 				},
 				default: true,
 			},
-			// Test Input field for other categories
 			{
-				displayName: 'Test Input',
-				name: 'testInput',
-				type: 'string',
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				typeOptions: { searchable: true },
 				displayOptions: {
-					show: {
-						category: ['list', 'suppression'],
-					},
+					show: { category: ['list'] },
+				},
+				options: [{ name: 'Create List', value: 'createList' }],
+				default: '',
+			},
+			{
+				displayName: 'List Name',
+				name: 'listName',
+				type: 'string',
+				required: true,
+				displayOptions: {
+					show: { category: ['list'], operation: ['createList'] },
 				},
 				default: '',
+			},
+			{
+				displayName: 'Custom Fields',
+				name: 'customFields',
+				type: 'fixedCollection',
+				typeOptions: { multipleValues: true },
+				displayOptions: {
+					show: { category: ['list'], operation: ['createList'] },
+				},
+				default: {},
+				options: [
+					{
+						displayName: 'Field',
+						name: 'field',
+						values: [
+							{
+								displayName: 'Field Name',
+								name: 'fieldName',
+								type: 'string',
+								required: true,
+								default: '',
+							},
+							{
+								displayName: 'Field Type',
+								name: 'fieldType',
+								type: 'options',
+								required: true,
+								default: 'text',
+								options: [
+									{ name: 'Text', value: 'text' },
+									{ name: 'Number', value: 'number' },
+									{ name: 'Date', value: 'date' },
+									{ name: 'Select One', value: 'select' },
+									{ name: 'Select Many', value: 'multiSelect' },
+								],
+							},
+							{ displayName: 'Required', name: 'required', type: 'boolean', default: false },
+							{ displayName: 'Visible', name: 'visible', type: 'boolean', default: true },
+							{
+								displayName: 'Unique Identifier',
+								name: 'uniqueId',
+								type: 'boolean',
+								required: false,
+								default: false,
+							},
+							{
+								displayName: 'Options',
+								name: 'options',
+								type: 'string',
+								default: '',
+								description: 'Comma-separated options (for Select One/Many)',
+							},
+						],
+					},
+				],
 			},
 		],
 	};
@@ -485,6 +577,12 @@ export class TouchBasePro implements INodeType {
 			},
 			subscriber: {
 				addOrUpdateSubscriber: addOrUpdateSubscriber,
+			},
+			list: {
+				createList: createList,
+			},
+			suppression: {
+				addToSuppressionList: addToSuppressionList,
 			},
 		};
 
@@ -515,6 +613,8 @@ export class TouchBasePro implements INodeType {
 			getListOptions,
 			getCustomFields,
 			getSubscriberOptions,
+			getSuppressionListOptions,
+			getSuppressionEmailsOptions,
 		},
 	};
 }

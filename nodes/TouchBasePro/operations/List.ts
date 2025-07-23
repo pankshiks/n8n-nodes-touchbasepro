@@ -1,4 +1,4 @@
-import { INodePropertyOptions, ILoadOptionsFunctions } from 'n8n-workflow';
+import { INodePropertyOptions, ILoadOptionsFunctions, IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { touchBaseRequest } from '../TouchBasePro.api';
 
 /**
@@ -31,4 +31,46 @@ export async function getListOptions(this: ILoadOptionsFunctions): Promise<INode
 	} while (page <= totalPages);
 
 	return options;
+}
+
+/**
+ * Create a new list with welcome email and custom fields
+ */
+export async function createList(
+  this: IExecuteFunctions,
+  index: number,
+): Promise<IDataObject> {
+  const name = this.getNodeParameter('listName', index) as string;
+  const customFieldsCollection = this.getNodeParameter('customFields', index) as { field?: any[] };
+  const customFieldsInput = customFieldsCollection.field || [];
+
+  // Map UI field types to API types
+  const typeMap: Record<string, string> = {
+    text: 'Text',
+    number: 'Number',
+    date: 'Date',
+    select: 'MultiSelectOne',
+    multiSelect: 'MultiSelectMany',
+  };
+
+  const fields = customFieldsInput.map((entry: any) => {
+    const field: any = {
+      "Name": entry.fieldName,
+      "Type": typeMap[entry.fieldType],
+      "IsRequired": entry.required,
+      "IsVisible": entry.visible,
+      "IsUniqueIdField": entry.uniqueId,
+    };
+    if (entry.fieldType === 'select' || entry.fieldType === 'multiSelect') {
+      field.options = (entry.options || '').split(',').map((o: string) => o.trim()).filter(Boolean);
+    }
+    return field;
+  });
+
+  const body: IDataObject = {
+    name,
+    CustomFields: fields,
+  };
+
+  return await touchBaseRequest.call(this, 'POST', '/email/lists', body);
 }
