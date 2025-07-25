@@ -1,48 +1,73 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+# n8n-nodes-touchbasepro
 
-# n8n-nodes-starter
+This is an n8n community node. It lets you use TouchBasePro in your n8n workflows.
 
-This repo contains example nodes to help you get started building your own custom integrations for [n8n](https://n8n.io). It includes the node linter and other dependencies.
+TouchBasePro is an email marketing and transactional email platform for sending, managing, and tracking emails at scale.
 
-To make your custom node available to the community, you must create it as an npm package, and [submit it to the npm registry](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
+[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-If you would like your node to be available on n8n cloud you can also [submit your node for verification](https://docs.n8n.io/integrations/creating-nodes/deploy/submit-community-nodes/).
+[Installation](#installation)  
+[Operations](#operations)  
+[Credentials](#credentials)  
+[Compatibility](#compatibility)  
+[Usage](#usage)  
+[Resources](#resources)  
+[Version history](#version-history)  
 
-## Prerequisites
+## Installation
 
-You need the following installed on your development machine:
+Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
-* [git](https://git-scm.com/downloads)
-* Node.js and npm. Minimum version Node 20. You can find instructions on how to install both using nvm (Node Version Manager) for Linux, Mac, and WSL [here](https://github.com/nvm-sh/nvm). For Windows users, refer to Microsoft's guide to [Install NodeJS on Windows](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows).
-* Install n8n with:
-  ```
-  npm install n8n -g
-  ```
-* Recommended: follow n8n's guide to [set up your development environment](https://docs.n8n.io/integrations/creating-nodes/build/node-development-environment/).
+```
+npm install n8n-nodes-touchbasepro
+```
 
-## Using this starter
+## Operations
 
-These are the basic steps for working with the starter. For detailed guidance on creating and publishing nodes, refer to the [documentation](https://docs.n8n.io/integrations/creating-nodes/).
+This node supports the following resources and operations:
 
-1. [Generate a new repository](https://github.com/n8n-io/n8n-nodes-starter/generate) from this template repository.
-2. Clone your new repo:
-   ```
-   git clone https://github.com/<your organization>/<your-repo-name>.git
-   ```
-3. Run `npm i` to install dependencies.
-4. Open the project in your editor.
-5. Browse the examples in `/nodes` and `/credentials`. Modify the examples, or replace them with your own nodes.
-6. Update the `package.json` to match your details.
-7. Run `npm run lint` to check for errors or `npm run lintfix` to automatically fix errors when possible.
-8. Test your node locally. Refer to [Run your node locally](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/) for guidance.
-9. Replace this README with documentation for your node. Use the [README_TEMPLATE](README_TEMPLATE.md) to get started.
-10. Update the LICENSE file to use your details.
-11. [Publish](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry) your package to npm.
+### Transactional Email
+- **Send Transactional Smart Email**: Send a transactional email using a Smart Email template, with support for recipients, CC, BCC, attachments, merge fields, and tracking options.
 
-## More information
+### List
+- **Create List**: Create a new email list with custom fields and welcome email options.
 
-Refer to our [documentation on creating nodes](https://docs.n8n.io/integrations/creating-nodes/) for detailed information on building your own nodes.
+### Subscriber
+- **Add or Update Subscriber**: Add a new subscriber or update an existing one in a list, including custom fields.
 
-## License
+### Suppression
+- **Add Email(s) to Suppression List**: Add one or more emails to the suppression list for a client.
 
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+## Credentials
+
+This node requires TouchBasePro API credentials:
+- **Username**: Your TouchBasePro account username.
+- **Password**: Your TouchBasePro account password.
+
+Set up your credentials in n8n by creating a new credential of type `TouchBasePro API` and entering your username and password.
+
+## Compatibility
+
+- Requires n8n v1.0.0 or higher.
+- Requires Node.js >= 20.15.
+- Tested with the latest n8n and TouchBasePro API versions.
+
+## Usage
+
+- Add the TouchBasePro node to your workflow and select the desired resource and operation.
+- Configure the required fields and map data as needed.
+- For sending emails, ensure you have a Smart Email template set up in TouchBasePro.
+- For list and subscriber management, ensure you have the correct list IDs and custom fields configured.
+
+## Resources
+
+* [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
+* [TouchBasePro documentation](https://www.touchbasepro.io/)
+
+## Version history
+
+- 0.1.0: Initial release with support for transactional emails, list management, subscribers, and suppression lists.
+
+---
+
+MIT License. See [LICENSE.md](./LICENSE.md) for details.

@@ -7,11 +7,28 @@
     "n8n-community-node-package"
   ],
   "license": "MIT",
+  "main": "index.js",
+  "files": [
+    "dist",
+    "index.js",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/touchbasepro/n8n-nodes-touchbasepro.git"
+  },
+  "author": {
+    "name": "Ysrajsingh",
+    "email": "hello@yashrajs.com"
+  },
+  "bugs": {
+    "url": "https://github.com/touchbasepro/n8n-nodes-touchbasepro/issues"
+  },
   "homepage": "https://www.touchbasepro.io/",
   "engines": {
     "node": ">=20.15"
   },
-  "main": "index.js",
   "scripts": {
     "build": "npx rimraf dist && tsc && gulp build:icons",
     "dev": "tsc --watch",
@@ -20,9 +37,6 @@
     "lintfix": "eslint nodes credentials package.json --fix",
     "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
   },
-  "files": [
-    "dist"
-  ],
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [

@@ -20,7 +20,11 @@ import {
 	getSubscriberOptions,
 } from './operations/Subscriber';
 import { getListOptions } from './operations/List';
-import { addToSuppressionList, getSuppressionListOptions, getSuppressionEmailsOptions } from './operations/Suppression';
+import {
+	addToSuppressionList,
+	getSuppressionListOptions,
+	getSuppressionEmailsOptions,
+} from './operations/Suppression';
 
 export class TouchBasePro implements INodeType {
 	description: INodeTypeDescription = {
@@ -47,6 +51,7 @@ export class TouchBasePro implements INodeType {
 				displayName: 'Resource',
 				name: 'resource',
 				type: 'options',
+				noDataExpression: true,
 				typeOptions: { searchable: true },
 				options: [
 					{ name: 'Transactional Email', value: 'transactionalEmail' },
@@ -54,37 +59,52 @@ export class TouchBasePro implements INodeType {
 					{ name: 'Subscriber', value: 'subscriber' },
 					{ name: 'Suppression', value: 'suppression' },
 				],
-				default: '',
-				description: 'Select the resource to operate on',
+				default: 'transactionalEmail',
 			},
 			// Operation for Transactional Email Actions
 			{
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
+				noDataExpression: true,
 				typeOptions: { searchable: true },
 				displayOptions: {
 					show: { resource: ['transactionalEmail'] },
 				},
-				options: [{ name: 'Send Transactional Smart Email', value: 'sendSmartEmail' }],
-				default: '', // No automatic selection
+				options: [
+					{
+						name: 'Send Transactional Smart Email',
+						value: 'sendSmartEmail',
+						action: 'Send transactional smart email a transactional email',
+					},
+				],
+				default: 'sendSmartEmail', // No automatic selection
 			},
 			// Operation for Subscriber Actions (moved from List)
 			{
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
+				noDataExpression: true,
 				typeOptions: { searchable: true },
 				displayOptions: {
 					show: { resource: ['subscriber'] },
 				},
-				options: [{ name: 'Add/Update Subscriber', value: 'addOrUpdateSubscriber' }],
-				default: '',
+				options: [
+					{
+						name: 'Add/Update Subscriber',
+						value: 'addOrUpdateSubscriber',
+						action: 'Add update subscriber a subscriber',
+					},
+				],
+				default: 'addOrUpdateSubscriber',
 			},
 			{
-				displayName: 'List',
+				displayName: 'List Name or ID',
 				name: 'listId',
 				type: 'options',
+				description:
+					'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getListOptions',
 					searchable: true,
@@ -114,6 +134,7 @@ export class TouchBasePro implements INodeType {
 				displayName: 'Email',
 				name: 'email',
 				type: 'string',
+				placeholder: 'name@email.com',
 				default: '',
 				required: true,
 				displayOptions: {
@@ -125,9 +146,11 @@ export class TouchBasePro implements INodeType {
 				},
 			},
 			{
-				displayName: 'Current Email',
+				displayName: 'Current Email Name or ID',
 				name: 'currentEmail',
 				type: 'options',
+				description:
+					'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getSubscriberOptions',
 					loadOptionsDependsOn: ['listId'],
@@ -147,6 +170,7 @@ export class TouchBasePro implements INodeType {
 				displayName: 'New Email',
 				name: 'email',
 				type: 'string',
+				placeholder: 'name@email.com',
 				default: '',
 				displayOptions: {
 					show: {
@@ -199,10 +223,10 @@ export class TouchBasePro implements INodeType {
 				type: 'options',
 				options: [
 					{ name: 'Active', value: 'Active' },
-					{ name: 'Unsubscribed', value: 'Unsubscribed' },
 					{ name: 'Bounced', value: 'Bounced' },
-					{ name: 'Unconfirmed', value: 'Unconfirmed' },
 					{ name: 'Deleted', value: 'Deleted' },
+					{ name: 'Unconfirmed', value: 'Unconfirmed' },
+					{ name: 'Unsubscribed', value: 'Unsubscribed' },
 				],
 				default: 'Active',
 				displayOptions: {
@@ -230,9 +254,11 @@ export class TouchBasePro implements INodeType {
 						name: 'field',
 						values: [
 							{
-								displayName: 'Field',
+								displayName: 'Field Name or ID',
 								name: 'fieldMeta',
 								type: 'options',
+								description:
+									'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 								typeOptions: {
 									loadOptionsMethod: 'getCustomFields',
 									loadOptionsDependsOn: ['listId'],
@@ -257,14 +283,19 @@ export class TouchBasePro implements INodeType {
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
+				noDataExpression: true,
 				typeOptions: { searchable: true },
 				displayOptions: {
 					show: { resource: ['suppression'] },
 				},
 				options: [
-					{ name: 'Add Email(s) to Suppression List', value: 'addToSuppressionList' },
+					{
+						name: 'Add Email(s) to Suppression List',
+						value: 'addToSuppressionList',
+						action: 'Add email s to suppression list a suppression',
+					},
 				],
-				default: '',
+				default: 'addToSuppressionList',
 			},
 			{
 				displayName: 'Emails to Suppress',
@@ -273,7 +304,7 @@ export class TouchBasePro implements INodeType {
 				typeOptions: { multipleValues: true },
 				default: { emails: [{ email: '' }] },
 				required: true,
-				description: 'Add one or more email addresses to suppress.',
+				description: 'Add one or more email addresses to suppress',
 				displayOptions: {
 					show: { resource: ['suppression'], operation: ['addToSuppressionList'] },
 				},
@@ -286,6 +317,7 @@ export class TouchBasePro implements INodeType {
 								displayName: 'Email',
 								name: 'email',
 								type: 'string',
+								placeholder: 'name@email.com',
 								default: '',
 							},
 						],
@@ -294,7 +326,7 @@ export class TouchBasePro implements INodeType {
 			},
 			// Smart Email Template dropdown
 			{
-				displayName: 'Smart Email Template',
+				displayName: 'Smart Email Template Name or ID',
 				name: 'smartEmailId',
 				type: 'options',
 				typeOptions: {
@@ -309,7 +341,8 @@ export class TouchBasePro implements INodeType {
 				},
 				default: '',
 				required: true,
-				description: 'Choose from your TouchBasePro smart transactional email templates',
+				description:
+					'Choose from your TouchBasePro smart transactional email templates. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			// Recipients
 			{
@@ -330,7 +363,13 @@ export class TouchBasePro implements INodeType {
 						displayName: 'Recipients',
 						values: [
 							{ displayName: 'Name', name: 'name', type: 'string', default: '' },
-							{ displayName: 'Email', name: 'email', type: 'string', default: '' },
+							{
+								displayName: 'Email',
+								name: 'email',
+								type: 'string',
+								placeholder: 'name@email.com',
+								default: '',
+							},
 						],
 					},
 				],
@@ -354,7 +393,13 @@ export class TouchBasePro implements INodeType {
 						displayName: 'CC Recipients',
 						values: [
 							{ displayName: 'Name', name: 'name', type: 'string', default: '' },
-							{ displayName: 'Email', name: 'email', type: 'string', default: '' },
+							{
+								displayName: 'Email',
+								name: 'email',
+								type: 'string',
+								placeholder: 'name@email.com',
+								default: '',
+							},
 						],
 					},
 				],
@@ -378,7 +423,13 @@ export class TouchBasePro implements INodeType {
 						displayName: 'BCC Recipients',
 						values: [
 							{ displayName: 'Name', name: 'name', type: 'string', default: '' },
-							{ displayName: 'Email', name: 'email', type: 'string', default: '' },
+							{
+								displayName: 'Email',
+								name: 'email',
+								type: 'string',
+								placeholder: 'name@email.com',
+								default: '',
+							},
 						],
 					},
 				],
@@ -403,7 +454,12 @@ export class TouchBasePro implements INodeType {
 						values: [
 							{ displayName: 'Name', name: 'name', type: 'string', default: '' },
 							{ displayName: 'Type', name: 'type', type: 'string', default: '' },
-							{ displayName: 'Input Binary Field', name: 'binaryPropertyName', type: 'string', default: '' },
+							{
+								displayName: 'Input Binary Field',
+								name: 'binaryPropertyName',
+								type: 'string',
+								default: '',
+							},
 						],
 					},
 				],
@@ -427,9 +483,11 @@ export class TouchBasePro implements INodeType {
 						displayName: 'Field',
 						values: [
 							{
-								displayName: 'Field Name',
+								displayName: 'Field Name or ID',
 								name: 'fieldName',
 								type: 'options',
+								description:
+									'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 								typeOptions: {
 									loadOptionsMethod: 'getMergeFieldOptions',
 									loadOptionsDependsOn: ['smartEmailId'],
@@ -487,12 +545,13 @@ export class TouchBasePro implements INodeType {
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
+				noDataExpression: true,
 				typeOptions: { searchable: true },
 				displayOptions: {
 					show: { resource: ['list'] },
 				},
-				options: [{ name: 'Create List', value: 'createList' }],
-				default: '',
+				options: [{ name: 'Create List', value: 'createList', action: 'Create list a list' }],
+				default: 'createList',
 			},
 			{
 				displayName: 'List Name',
@@ -532,26 +591,27 @@ export class TouchBasePro implements INodeType {
 								required: true,
 								default: 'text',
 								options: [
-									{ name: 'Text', value: 'text' },
-									{ name: 'Number', value: 'number' },
-									{ name: 'Date', value: 'date' },
-									{ name: 'Select One', value: 'select' },
-									{ name: 'Select Many', value: 'multiSelect' },
-								],
-							},
-							{ displayName: 'Required', name: 'required', type: 'boolean', default: false },
-							{ displayName: 'Visible', name: 'visible', type: 'boolean', default: true },
-							{
-								displayName: 'Unique Identifier',
-								name: 'uniqueId',
-								type: 'boolean',
-								required: false,
-								default: false,
-								displayOptions: {
-									show: {
-										fieldType: ['text'],
+									{
+										name: 'Date',
+										value: 'date',
 									},
-								},
+									{
+										name: 'Number',
+										value: 'number',
+									},
+									{
+										name: 'Select Many',
+										value: 'multiSelect',
+									},
+									{
+										name: 'Select One',
+										value: 'select',
+									},
+									{
+										name: 'Text',
+										value: 'text',
+									},
+								],
 							},
 							{
 								displayName: 'Options',
@@ -559,6 +619,24 @@ export class TouchBasePro implements INodeType {
 								type: 'string',
 								default: '',
 								description: 'Comma-separated options (for Select One/Many)',
+							},
+							{
+								displayName: 'Required',
+								name: 'required',
+								type: 'boolean',
+								default: false,
+							},
+							{
+								displayName: 'Unique Identifier',
+								name: 'uniqueId',
+								type: 'boolean',
+								default: false,
+							},
+							{
+								displayName: 'Visible',
+								name: 'visible',
+								type: 'boolean',
+								default: true,
 							},
 						],
 					},

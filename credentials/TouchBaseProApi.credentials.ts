@@ -18,4 +18,5 @@ export class TouchBaseProApi implements ICredentialType {
 			default: '',
 		},
 	];
+	documentationUrl = 'https://developer.touchbasepro.com/';
 }
