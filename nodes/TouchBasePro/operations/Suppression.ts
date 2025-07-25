@@ -62,9 +62,11 @@ export async function addToSuppressionList(
   this: IExecuteFunctions,
   index: number,
 ): Promise<IDataObject> {
-  const emails = this.getNodeParameter('suppressionEmails', index) as string[];
+  // Get emails from fixedCollection
+  const emailsCollection = this.getNodeParameter('suppressionEmails', index) as { emails: Array<{ email: string }> };
+  const emails = (emailsCollection.emails || []).map(e => e.email.trim()).filter(Boolean);
   if (!emails || emails.length === 0) {
-    throw new Error('Please select at least one email to suppress.');
+    throw new Error('Please provide at least one email to suppress.');
   }
   const body = { "Suppress": emails };
   return await touchBaseRequest.call(this, 'POST', '/email/client/suppressionlist', body);

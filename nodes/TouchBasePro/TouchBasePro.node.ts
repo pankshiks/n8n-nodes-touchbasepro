@@ -44,18 +44,18 @@ export class TouchBasePro implements INodeType {
 		outputs: ['main'] as (NodeConnectionType | INodeOutputConfiguration)[],
 		properties: [
 			{
-				displayName: 'Category',
-				name: 'category',
+				displayName: 'Resource',
+				name: 'resource',
 				type: 'options',
 				typeOptions: { searchable: true },
 				options: [
-					{ name: 'Transactional Email Actions', value: 'transactionalEmail' },
-					{ name: 'List Actions', value: 'list' },
-					{ name: 'Subscriber Actions', value: 'subscriber' },
-					{ name: 'Suppression Actions', value: 'suppression' },
+					{ name: 'Transactional Email', value: 'transactionalEmail' },
+					{ name: 'List', value: 'list' },
+					{ name: 'Subscriber', value: 'subscriber' },
+					{ name: 'Suppression', value: 'suppression' },
 				],
-				default: '', // No automatic selection
-				description: 'Select the category of actions to perform',
+				default: '',
+				description: 'Select the resource to operate on',
 			},
 			// Operation for Transactional Email Actions
 			{
@@ -64,7 +64,7 @@ export class TouchBasePro implements INodeType {
 				type: 'options',
 				typeOptions: { searchable: true },
 				displayOptions: {
-					show: { category: ['transactionalEmail'] },
+					show: { resource: ['transactionalEmail'] },
 				},
 				options: [{ name: 'Send Transactional Smart Email', value: 'sendSmartEmail' }],
 				default: '', // No automatic selection
@@ -76,7 +76,7 @@ export class TouchBasePro implements INodeType {
 				type: 'options',
 				typeOptions: { searchable: true },
 				displayOptions: {
-					show: { category: ['subscriber'] },
+					show: { resource: ['subscriber'] },
 				},
 				options: [{ name: 'Add/Update Subscriber', value: 'addOrUpdateSubscriber' }],
 				default: '',
@@ -93,7 +93,7 @@ export class TouchBasePro implements INodeType {
 				default: '',
 				required: true,
 				displayOptions: {
-					show: { category: ['subscriber'], operation: ['addOrUpdateSubscriber'] },
+					show: { resource: ['subscriber'], operation: ['addOrUpdateSubscriber'] },
 				},
 			},
 			{
@@ -106,7 +106,7 @@ export class TouchBasePro implements INodeType {
 				],
 				default: 'add',
 				displayOptions: {
-					show: { category: ['subscriber'], operation: ['addOrUpdateSubscriber'] },
+					show: { resource: ['subscriber'], operation: ['addOrUpdateSubscriber'] },
 				},
 			},
 			// Then fields for add vs. update:
@@ -118,7 +118,7 @@ export class TouchBasePro implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						category: ['subscriber'],
+						resource: ['subscriber'],
 						operation: ['addOrUpdateSubscriber'],
 						subOperation: ['add'],
 					},
@@ -137,7 +137,7 @@ export class TouchBasePro implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						category: ['subscriber'],
+						resource: ['subscriber'],
 						operation: ['addOrUpdateSubscriber'],
 						subOperation: ['update'],
 					},
@@ -150,7 +150,7 @@ export class TouchBasePro implements INodeType {
 				default: '',
 				displayOptions: {
 					show: {
-						category: ['subscriber'],
+						resource: ['subscriber'],
 						operation: ['addOrUpdateSubscriber'],
 						subOperation: ['update'],
 					},
@@ -164,7 +164,7 @@ export class TouchBasePro implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						category: ['subscriber'],
+						resource: ['subscriber'],
 						operation: ['addOrUpdateSubscriber'],
 					},
 				},
@@ -176,7 +176,7 @@ export class TouchBasePro implements INodeType {
 				default: true,
 				displayOptions: {
 					show: {
-						category: ['subscriber'],
+						resource: ['subscriber'],
 						operation: ['addOrUpdateSubscriber'],
 					},
 				},
@@ -188,7 +188,7 @@ export class TouchBasePro implements INodeType {
 				default: true,
 				displayOptions: {
 					show: {
-						category: ['subscriber'],
+						resource: ['subscriber'],
 						operation: ['addOrUpdateSubscriber'],
 					},
 				},
@@ -207,7 +207,7 @@ export class TouchBasePro implements INodeType {
 				default: 'Active',
 				displayOptions: {
 					show: {
-						category: ['subscriber'],
+						resource: ['subscriber'],
 						operation: ['addOrUpdateSubscriber'],
 					},
 				},
@@ -219,7 +219,7 @@ export class TouchBasePro implements INodeType {
 				typeOptions: { multipleValues: true },
 				displayOptions: {
 					show: {
-						category: ['subscriber'],
+						resource: ['subscriber'],
 						operation: ['addOrUpdateSubscriber'],
 					},
 				},
@@ -259,7 +259,7 @@ export class TouchBasePro implements INodeType {
 				type: 'options',
 				typeOptions: { searchable: true },
 				displayOptions: {
-					show: { category: ['suppression'] },
+					show: { resource: ['suppression'] },
 				},
 				options: [
 					{ name: 'Add Email(s) to Suppression List', value: 'addToSuppressionList' },
@@ -267,34 +267,30 @@ export class TouchBasePro implements INodeType {
 				default: '',
 			},
 			{
-				displayName: 'List',
-				name: 'suppressionListId',
-				type: 'options',
-				typeOptions: {
-					loadOptionsMethod: 'getSuppressionListOptions',
-					searchable: true,
-					refreshOnChange: true,
-				},
-				default: '',
-				required: true,
-				displayOptions: {
-					show: { category: ['suppression'], operation: ['addToSuppressionList'] },
-				},
-			},
-			{
 				displayName: 'Emails to Suppress',
 				name: 'suppressionEmails',
-				type: 'multiOptions',
-				typeOptions: {
-					loadOptionsMethod: 'getSuppressionEmailsOptions',
-					loadOptionsDependsOn: ['suppressionListId'],
-					searchable: true,
-				},
-				default: [],
+				type: 'fixedCollection',
+				typeOptions: { multipleValues: true },
+				default: { emails: [{ email: '' }] },
 				required: true,
+				description: 'Add one or more email addresses to suppress.',
 				displayOptions: {
-					show: { category: ['suppression'], operation: ['addToSuppressionList'] },
+					show: { resource: ['suppression'], operation: ['addToSuppressionList'] },
 				},
+				options: [
+					{
+						name: 'emails',
+						displayName: 'Emails',
+						values: [
+							{
+								displayName: 'Email',
+								name: 'email',
+								type: 'string',
+								default: '',
+							},
+						],
+					},
+				],
 			},
 			// Smart Email Template dropdown
 			{
@@ -307,7 +303,7 @@ export class TouchBasePro implements INodeType {
 				},
 				displayOptions: {
 					show: {
-						category: ['transactionalEmail'],
+						resource: ['transactionalEmail'],
 						operation: ['sendSmartEmail'],
 					},
 				},
@@ -323,7 +319,7 @@ export class TouchBasePro implements INodeType {
 				typeOptions: { multipleValues: true },
 				displayOptions: {
 					show: {
-						category: ['transactionalEmail'],
+						resource: ['transactionalEmail'],
 						operation: ['sendSmartEmail'],
 					},
 				},
@@ -347,7 +343,7 @@ export class TouchBasePro implements INodeType {
 				typeOptions: { multipleValues: true },
 				displayOptions: {
 					show: {
-						category: ['transactionalEmail'],
+						resource: ['transactionalEmail'],
 						operation: ['sendSmartEmail'],
 					},
 				},
@@ -371,7 +367,7 @@ export class TouchBasePro implements INodeType {
 				typeOptions: { multipleValues: true },
 				displayOptions: {
 					show: {
-						category: ['transactionalEmail'],
+						resource: ['transactionalEmail'],
 						operation: ['sendSmartEmail'],
 					},
 				},
@@ -395,7 +391,7 @@ export class TouchBasePro implements INodeType {
 				typeOptions: { multipleValues: true },
 				displayOptions: {
 					show: {
-						category: ['transactionalEmail'],
+						resource: ['transactionalEmail'],
 						operation: ['sendSmartEmail'],
 					},
 				},
@@ -407,7 +403,7 @@ export class TouchBasePro implements INodeType {
 						values: [
 							{ displayName: 'Name', name: 'name', type: 'string', default: '' },
 							{ displayName: 'Type', name: 'type', type: 'string', default: '' },
-							{ displayName: 'Data', name: 'data', type: 'string', default: '' },
+							{ displayName: 'Input Binary Field', name: 'binaryPropertyName', type: 'string', default: '' },
 						],
 					},
 				],
@@ -420,7 +416,7 @@ export class TouchBasePro implements INodeType {
 				typeOptions: { multipleValues: true },
 				displayOptions: {
 					show: {
-						category: ['transactionalEmail'],
+						resource: ['transactionalEmail'],
 						operation: ['sendSmartEmail'],
 					},
 				},
@@ -457,7 +453,7 @@ export class TouchBasePro implements INodeType {
 				type: 'boolean',
 				displayOptions: {
 					show: {
-						category: ['transactionalEmail'],
+						resource: ['transactionalEmail'],
 						operation: ['sendSmartEmail'],
 					},
 				},
@@ -469,7 +465,7 @@ export class TouchBasePro implements INodeType {
 				type: 'boolean',
 				displayOptions: {
 					show: {
-						category: ['transactionalEmail'],
+						resource: ['transactionalEmail'],
 						operation: ['sendSmartEmail'],
 					},
 				},
@@ -481,7 +477,7 @@ export class TouchBasePro implements INodeType {
 				type: 'boolean',
 				displayOptions: {
 					show: {
-						category: ['transactionalEmail'],
+						resource: ['transactionalEmail'],
 						operation: ['sendSmartEmail'],
 					},
 				},
@@ -493,7 +489,7 @@ export class TouchBasePro implements INodeType {
 				type: 'options',
 				typeOptions: { searchable: true },
 				displayOptions: {
-					show: { category: ['list'] },
+					show: { resource: ['list'] },
 				},
 				options: [{ name: 'Create List', value: 'createList' }],
 				default: '',
@@ -504,7 +500,7 @@ export class TouchBasePro implements INodeType {
 				type: 'string',
 				required: true,
 				displayOptions: {
-					show: { category: ['list'], operation: ['createList'] },
+					show: { resource: ['list'], operation: ['createList'] },
 				},
 				default: '',
 			},
@@ -514,7 +510,7 @@ export class TouchBasePro implements INodeType {
 				type: 'fixedCollection',
 				typeOptions: { multipleValues: true },
 				displayOptions: {
-					show: { category: ['list'], operation: ['createList'] },
+					show: { resource: ['list'], operation: ['createList'] },
 				},
 				default: {},
 				options: [
@@ -551,6 +547,11 @@ export class TouchBasePro implements INodeType {
 								type: 'boolean',
 								required: false,
 								default: false,
+								displayOptions: {
+									show: {
+										fieldType: ['text'],
+									},
+								},
 							},
 							{
 								displayName: 'Options',
@@ -587,17 +588,17 @@ export class TouchBasePro implements INodeType {
 		};
 
 		for (let i = 0; i < items.length; i++) {
-			const category = this.getNodeParameter('category', i) as string;
+			const resource = this.getNodeParameter('resource', i) as string;
 			const operation = this.getNodeParameter('operation', i) as string;
 
-			const func = operationFunctionMap[category]?.[operation];
+			const func = operationFunctionMap[resource]?.[operation];
 			if (func) {
 				const response = await func.call(this, i);
 				returnData.push({ json: response });
 			} else {
 				throw new NodeOperationError(
 					this.getNode(),
-					`Operation "${operation}" not implemented for category "${category}"`,
+					`Operation "${operation}" not implemented for resource "${resource}"`,
 					{ itemIndex: i },
 				);
 			}

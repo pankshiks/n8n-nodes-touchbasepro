@@ -43,11 +43,25 @@ export async function sendSmartEmail(
 		this.getNodeParameter('bcc', index, {}),
 		'recipients',
 	);
-	const attachments = unwrap<{
+
+	const rawAttachments = unwrap<{
 		name: string;
 		type: string;
-		data: string;
+		binaryPropertyName: string;
 	}>(this.getNodeParameter('attachments', index, {}), 'attachments');
+
+	const attachments = [];
+	for (const att of rawAttachments) {
+		if (att.binaryPropertyName) {
+			const buffer = await this.helpers.getBinaryDataBuffer(index, att.binaryPropertyName);
+
+			attachments.push({
+				name: att.name,
+				type: att.type,
+				data: buffer.toString('base64'),
+			});
+		}
+	}
 	const mergeFields = unwrap<{ fieldName: string; fieldValue: string }>(
 		this.getNodeParameter('mergeFields', index, {}),
 		'field',

@@ -7,15 +7,32 @@ export async function getCustomFields(
 	const listId = this.getCurrentNodeParameter('listId') as string;
 	if (!listId) return [];
 
-	const response = await touchBaseRequest.call(this, 'GET', `/email/lists/${listId}/fields`);
-	const fields = response.data;
+	const options: INodePropertyOptions[] = [];
+	let page = 1;
+	const pageSize = 1000;
+	let totalPages = 1;
 
-	if (!Array.isArray(fields)) return [];
+	do {
+		const response = await touchBaseRequest.call(
+			this,
+			'GET',
+			`/email/lists/${listId}/fields`,
+			{},
+			{ page, pageSize },
+		);
+		const fields = response.data;
+		if (!Array.isArray(fields)) break;
+		totalPages = response.totalPages || 1;
+		for (const field of fields) {
+			options.push({
+				name: `${field.name}`,
+				value: `${field.code}::${field.type}`,
+			});
+		}
+		page++;
+	} while (page <= totalPages);
 
-	return fields.map((field: any) => ({
-		name: `${field.name}`,
-		value: `${field.code}::${field.type}`,
-	}));
+	return options;
 }
 
 export async function getSubscriberOptions(
